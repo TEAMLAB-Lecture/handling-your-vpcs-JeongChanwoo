@@ -17,16 +17,27 @@ def create_vpc():
     response = ec2.describe_vpcs()
     vpc_id = response.get('Vpcs', [{}])[0].get('VpcId','')
 
+    f_temp = open("./log/vpcs_boto_log.csv", 'r',encoding='utf-8')
+    header = f_temp.readline()
+    f_temp.close()
     f = open("./log/vpcs_boto_log.csv", 'a+',encoding='utf-8')
-    header = f.readline()
+
+
     if not header:
         f.write("vpc_id, date, operation\n")
+
 
     elif header==("vpc_id, date, operation\n"):
         pass
 
+
+
+
+    g_temp = open("./log/vpcs_boto_error_log.csv", 'r', encoding='utf-8')
+    header_error = g_temp.readline()
+    g_temp.close()
     g = open("./log/vpcs_boto_error_log.csv", 'a+', encoding='utf-8')
-    header_error = g.readline()
+
     if not header_error:
         g.write("error, date, operation\n")
 
@@ -34,7 +45,7 @@ def create_vpc():
         pass
 
 
-
+    group_id_list=[]
 
     try:
         for ind in range(10):
@@ -44,7 +55,7 @@ def create_vpc():
                                             Description = 'Made by boto3',
                                             VpcId = vpc_id)
 
-
+            group_id_list.append('HelloBOTO_%s' % ind)
             security_group_id = response['GroupId']
 
             print('Security Group Created %s in vpc %s.' % (security_group_id, vpc_id))
@@ -77,7 +88,7 @@ def create_vpc():
         g.write(("%s,%s,%s\n" % (e, time_gen, "Gen" )))
         g.close()
 
-
+    # return group_id_list
 
 
 def delet_vpc():
@@ -101,11 +112,14 @@ def delet_vpc():
             print(group_id)
             vpc_group_id.append(group_id)
 
+
+
             response = ec2.delete_security_group(GroupId = group_id)
             time_gen = time_generation()
             print('Security Group Deleted_%s' % (group_name))
 
             f.write(("%s,%s,%s\n" % (group_id, time_gen, "Del" )))
+
         f.close()
 
 
@@ -158,23 +172,24 @@ def s3_insert(bucket_name):
         if local_file_name in bucket_file_list:
             file_down(bucket_name, local_file_name)
             f_copy = open("./log/%s_copy.csv" % local_file_name, 'a+',encoding='utf-8')
-            f = open("./log/%s.csv" % local_file_name, 'a+',encoding='utf-8')
+            f = open("./log/%s.csv" % local_file_name, 'r',encoding='utf-8')
 
             lines = f.readlines[1:] #헤드 제거
             for line in lines:
                 f_copy.write(line)
             f.close()
             f_copy.close()
+            s3.upload_file("./log/%s_copy.csv" % local_file_name, bucket_name, local_file_name)
             os.remove('./log/%s_copy.csv' % local_file_name)
 
-            s3.upload_file("./log/%s_copy.csv" % local_file_name, bucket_name, local_file_name)
+
 
 
         else:
             s3.upload_file("./log/%s" % local_file_name, bucket_name, local_file_name)
 
 if __name__ == '__main__':
-    create_vpc()
+    # create_vpc()
     delet_vpc()
     bucket_name = 'gachon-big-data-test'
     s3_insert(bucket_name)
