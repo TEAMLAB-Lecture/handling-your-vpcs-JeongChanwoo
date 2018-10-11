@@ -152,11 +152,11 @@ def s3_insert(bucket_name):
 
 
     if bucket_name not in bucekts:
-        s3 = boto3.client('s3', region_name = "ap-southest-1")
+        s3 = boto3.client('s3', region_name = "ap-southeast-1")
         response = s3.create_bucket(
             Bucket = bucket_name,
             CreateBucketConfiguration ={
-                'LocationConstraint' : 'ap-southest-1'
+                'LocationConstraint' : 'ap-southeast-1'
             }
         )
     else:
